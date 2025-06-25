@@ -204,7 +204,7 @@ async function sendMessage() {
 
 // Funzione per generare un ID univoco
 function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+  return crypto.randomUUID();
 }
 
 // Avvia l'applicazione quando il DOM è caricato
