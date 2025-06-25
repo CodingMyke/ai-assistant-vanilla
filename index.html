@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Assistant</title>
+  <link rel="stylesheet" href="src/css/main.css">
+  <script src="src/ts/main.ts" type="module" defer></script>
+</head>
+
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>AI Assistant</h2>
+        <button id="new-chat-btn" class="new-chat-btn">Nuova Chat</button>
+      </div>
+      <div class="history-container" id="chat-history">
+        <!-- Le chat precedenti verranno inserite qui dinamicamente -->
+      </div>
+    </aside>
+
+    <main class="chat-container">
+      <div class="chat-header">
+        <h1>Assistente Virtuale AI</h1>
+        <div class="model-selector">
+          <p>Livello di conoscenza:</p>
+          <div class="radio-group">
+            <label>
+              <input type="radio" name="model" value="gpt-3.5-turbo" checked>
+              <span>Standard</span>
+            </label>
+            <label>
+              <input type="radio" name="model" value="gpt-4">
+              <span>Avanzato</span>
+            </label>
+            <label>
+              <input type="radio" name="model" value="gpt-4-turbo">
+              <span>Esperto</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="messages-container" id="messages">
+        <div class="welcome-message">
+          <h2>Benvenuto nell'Assistente Virtuale AI</h2>
+          <p>Chiedimi qualsiasi cosa e ti risponderò utilizzando l'intelligenza artificiale.</p>
+        </div>
+        <!-- I messaggi verranno inseriti qui dinamicamente -->
+      </div>
+
+      <div class="input-container">
+        <textarea id="user-input" placeholder="Scrivi la tua domanda qui..." rows="1"></textarea>
+        <button id="send-btn" class="send-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </main>
+  </div>
+</body>
+
+</html>
