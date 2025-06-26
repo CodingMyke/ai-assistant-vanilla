@@ -8,8 +8,6 @@ import {
   updateMessagesView,
   updateChatHistory,
   createLoadingElement,
-  setSelectedModel,
-  getSelectedModel,
   showDeleteConfirmModal,
   enableChatRename,
 } from "./ui";
@@ -97,16 +95,6 @@ function setupEventListeners() {
       loadChat(chatItem.dataset.id);
     }
   });
-
-  // Cambio del modello
-  document.querySelectorAll('input[name="model"]').forEach((input) => {
-    input.addEventListener("change", () => {
-      if (currentChat) {
-        currentChat.model = getSelectedModel();
-        saveChat(currentChat);
-      }
-    });
-  });
 }
 
 // Funzione per creare una nuova chat
@@ -115,7 +103,6 @@ function createNewChat() {
     id: generateId(),
     title: "",
     messages: [],
-    model: getSelectedModel(),
     timestamp: Date.now(),
   };
 
@@ -147,7 +134,6 @@ function loadChat(chatId: string) {
       handleDeleteChat,
       handleRenameChat
     );
-    setSelectedModel(chat.model as any);
   }
 }
 
@@ -198,10 +184,7 @@ async function sendMessage() {
 
   try {
     // Ottieni la risposta dall'AI
-    const aiResponse = await getAIResponse(
-      currentChat.messages,
-      currentChat.model as any
-    );
+    const aiResponse = await getAIResponse(currentChat.messages);
 
     // Crea il messaggio dell'assistente
     const assistantMessage: Message = {

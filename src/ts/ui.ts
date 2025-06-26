@@ -1,6 +1,6 @@
 // ui.ts - Gestione dell'interfaccia utente
 
-import type { Chat, Message, OpenAIModel } from "./types";
+import type { Chat, Message } from "./types";
 import {
   formatMarkdownToHtml,
   truncateText,
@@ -371,24 +371,4 @@ export function updateChatHistory(
     );
     container.appendChild(chatEl);
   });
-}
-
-// Funzione per impostare il modello selezionato
-export function setSelectedModel(model: OpenAIModel): void {
-  const radioInputs = document.querySelectorAll<HTMLInputElement>(
-    'input[name="model"]'
-  );
-  radioInputs.forEach((input) => {
-    if (input.value === model) {
-      input.checked = true;
-    }
-  });
-}
-
-// Funzione per ottenere il modello selezionato
-export function getSelectedModel(): OpenAIModel {
-  const selectedInput = document.querySelector<HTMLInputElement>(
-    'input[name="model"]:checked'
-  );
-  return (selectedInput?.value as OpenAIModel) || "gpt-3.5-turbo";
 }

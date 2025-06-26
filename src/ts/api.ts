@@ -1,6 +1,6 @@
 // api.ts - Gestione delle chiamate API a OpenAI
 
-import type { Message, OpenAIModel } from "./types";
+import type { Message } from "./types";
 
 // In un'applicazione reale, questa chiave dovrebbe essere gestita lato server
 // per motivi di sicurezza. Qui la prendiamo dall'ambiente per semplicità.
@@ -19,10 +19,7 @@ interface OpenAIResponse {
   }[];
 }
 
-export async function getAIResponse(
-  messages: Message[],
-  model: OpenAIModel
-): Promise<string> {
+export async function getAIResponse(messages: Message[]): Promise<string> {
   try {
     // Converti i messaggi nel formato richiesto da OpenAI
     const openAIMessages: OpenAIMessage[] = [
@@ -44,7 +41,7 @@ export async function getAIResponse(
         Authorization: `Bearer ${API_KEY}`,
       },
       body: JSON.stringify({
-        model: model,
+        model: "gpt-3.5-turbo",
         messages: openAIMessages,
         temperature: 0.7,
       }),

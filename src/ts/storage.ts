@@ -13,7 +13,7 @@ export function loadChats(): Chat[] {
   if (!storedChats) return [];
 
   try {
-    return JSON.parse(storedChats);
+    return JSON.parse(storedChats) as Chat[];
   } catch (error) {
     console.error("Errore nel caricamento delle chat:", error);
     return [];
