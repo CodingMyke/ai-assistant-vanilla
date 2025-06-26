@@ -10,6 +10,7 @@ import {
   createLoadingElement,
   setSelectedModel,
   getSelectedModel,
+  showDeleteConfirmModal,
 } from "./ui";
 import { generateId, truncateText, sortChatsByTimestamp } from "./utils";
 
@@ -19,6 +20,9 @@ const userInput = document.getElementById("user-input") as HTMLTextAreaElement;
 const sendButton = document.getElementById("send-btn") as HTMLButtonElement;
 const newChatButton = document.getElementById(
   "new-chat-btn"
+) as HTMLButtonElement;
+const clearAllButton = document.getElementById(
+  "clear-all-btn"
 ) as HTMLButtonElement;
 const chatHistoryContainer = document.getElementById(
   "chat-history"
@@ -68,6 +72,9 @@ function setupEventListeners() {
 
   // Nuova chat
   newChatButton.addEventListener("click", createNewChat);
+
+  // Cancella tutte le chat
+  clearAllButton.addEventListener("click", clearAllChats);
 
   // Click su una chat nella cronologia
   chatHistoryContainer.addEventListener("click", (e) => {
@@ -253,6 +260,24 @@ function handleDeleteChat(chatId: string) {
       handleDeleteChat
     );
   }
+}
+
+// Funzione per cancellare tutte le chat
+function clearAllChats() {
+  showDeleteConfirmModal(
+    "all",
+    handleClearAllChats,
+    "Sei sicuro di voler cancellare tutte le chat? Questa azione non può essere annullata."
+  );
+}
+
+// Funzione per gestire la cancellazione di tutte le chat
+function handleClearAllChats() {
+  // Cancella tutte le chat dal localStorage
+  localStorage.removeItem("ai-assistant-chats");
+
+  // Crea una nuova chat
+  createNewChat();
 }
 
 // Avvia l'applicazione quando il DOM è caricato

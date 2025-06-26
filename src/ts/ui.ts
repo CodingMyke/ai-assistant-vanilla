@@ -76,7 +76,11 @@ export function showChatContextMenu(
 
   deleteOption.addEventListener("click", () => {
     menu.remove();
-    showDeleteConfirmModal(chatId, onDelete);
+    showDeleteConfirmModal(
+      chatId,
+      onDelete,
+      "Sei sicuro di voler eliminare questa chat? Questa azione non può essere annullata."
+    );
   });
 
   menu.appendChild(deleteOption);
@@ -90,17 +94,17 @@ export function showChatContextMenu(
 
   // Aggiungi il menu al documento temporaneamente per calcolare le dimensioni
   document.body.appendChild(menu);
-  
+
   // Calcola le dimensioni del menu e della finestra
   const menuRect = menu.getBoundingClientRect();
   const windowWidth = window.innerWidth;
   const windowHeight = window.innerHeight;
-  
+
   // Aggiusta la posizione orizzontale se il menu esce dalla finestra
   if (menuRect.right > windowWidth) {
     menu.style.left = `${rect.left - menuRect.width - 5}px`;
   }
-  
+
   // Aggiusta la posizione verticale se il menu esce dalla finestra
   if (menuRect.bottom > windowHeight) {
     menu.style.top = `${rect.bottom - menuRect.height}px`;
@@ -123,7 +127,8 @@ export function showChatContextMenu(
 // Funzione per mostrare la modale di conferma eliminazione
 export function showDeleteConfirmModal(
   chatId: string,
-  onConfirm: (chatId: string) => void
+  onConfirm: (chatId: string) => void,
+  message: string
 ): void {
   // Crea l'overlay della modale
   const overlay = document.createElement("div");
@@ -139,7 +144,7 @@ export function showDeleteConfirmModal(
       <h3>Conferma eliminazione</h3>
     </div>
     <div class="modal-body">
-      <p>Sei sicuro di voler eliminare questa chat? Questa azione non può essere annullata.</p>
+      <p>${message}</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary cancel-btn">Annulla</button>
