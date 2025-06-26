@@ -1,7 +1,7 @@
 // src/main.ts - File principale che coordina l'applicazione
 
 // Importa i tipi e le funzioni dagli altri moduli
-import type { Chat, Message, OpenAIModel } from "./types";
+import type { Chat, Message } from "./types";
 import { loadChats, saveChat, deleteChat, getChat } from "./storage";
 import { getAIResponse } from "./api";
 import {
