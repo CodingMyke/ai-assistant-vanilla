@@ -49,7 +49,8 @@ export function createLoadingElement(): HTMLDivElement {
 export function showChatContextMenu(
   event: MouseEvent,
   chatId: string,
-  onDelete: (chatId: string) => void
+  onDelete: (chatId: string) => void,
+  onRename?: (chatId: string) => void
 ): void {
   // Rimuovi eventuali menu esistenti
   const existingMenu = document.querySelector(".chat-context-menu");
@@ -60,6 +61,26 @@ export function showChatContextMenu(
   // Crea il menu contestuale
   const menu = document.createElement("div");
   menu.classList.add("chat-context-menu");
+
+  // Opzione rinomina
+  if (onRename) {
+    const renameOption = document.createElement("button");
+    renameOption.classList.add("context-menu-item", "rename-option");
+    renameOption.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+        <path d="m18.5 2.5 a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+      </svg>
+      Rinomina
+    `;
+
+    renameOption.addEventListener("click", () => {
+      menu.remove();
+      onRename(chatId);
+    });
+
+    menu.appendChild(renameOption);
+  }
 
   // Opzione elimina
   const deleteOption = document.createElement("button");
@@ -185,11 +206,80 @@ export function showDeleteConfirmModal(
   document.body.appendChild(overlay);
 }
 
+// Funzione per attivare la modalità di rinomina di una chat
+export function enableChatRename(
+  chatId: string,
+  currentTitle: string,
+  onSave: (chatId: string, newTitle: string) => void
+): void {
+  const chatItem = document.querySelector(
+    `[data-id="${chatId}"]`
+  ) as HTMLDivElement;
+  if (!chatItem) return;
+
+  const chatContent = chatItem.querySelector(".chat-content") as HTMLDivElement;
+  if (!chatContent) return;
+
+  // Salva il contenuto originale
+  const originalContent = chatContent.textContent || "";
+
+  // Crea l'input per la rinomina
+  const input = document.createElement("input");
+  input.type = "text";
+  input.classList.add("chat-rename-input");
+  input.value = currentTitle || originalContent;
+  input.maxLength = 30; // Lunghezza massima uguale a quella attuale
+  input.placeholder = "Nome della chat...";
+
+  // Sostituisci il contenuto con l'input
+  chatContent.innerHTML = "";
+  chatContent.appendChild(input);
+
+  // Focus sull'input e seleziona tutto il testo
+  input.focus();
+  input.select();
+
+  // Funzione per salvare la rinomina
+  const saveRename = () => {
+    const newTitle = input.value.trim();
+
+    if (newTitle && newTitle !== currentTitle) {
+      onSave(chatId, newTitle);
+    }
+
+    // Ripristina il contenuto normale
+    chatContent.textContent = newTitle || originalContent;
+  };
+
+  // Funzione per annullare la rinomina
+  const cancelRename = () => {
+    chatContent.textContent = originalContent;
+  };
+
+  // Event listeners
+  input.addEventListener("blur", saveRename);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveRename();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      cancelRename();
+    }
+  });
+
+  // Previeni la propagazione del click per evitare di selezionare la chat
+  input.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+}
+
 // Funzione per creare un elemento della cronologia chat
 export function createChatHistoryItem(
   chat: Chat,
   isActive: boolean = false,
-  onDelete: (chatId: string) => void
+  onDelete: (chatId: string) => void,
+  onRename?: (chatId: string) => void
 ): HTMLDivElement {
   const chatEl = document.createElement("div");
   chatEl.classList.add("chat-item");
@@ -217,7 +307,7 @@ export function createChatHistoryItem(
   // Previeni la propagazione del click per evitare di selezionare la chat
   menuButton.addEventListener("click", (e) => {
     e.stopPropagation();
-    showChatContextMenu(e, chat.id, onDelete);
+    showChatContextMenu(e, chat.id, onDelete, onRename);
   });
 
   chatEl.appendChild(chatContent);
@@ -264,7 +354,8 @@ export function updateChatHistory(
   chats: Chat[],
   container: HTMLElement,
   activeId?: string,
-  onDelete?: (chatId: string) => void
+  onDelete?: (chatId: string) => void,
+  onRename?: (chatId: string) => void
 ): void {
   container.innerHTML = "";
 
@@ -275,7 +366,8 @@ export function updateChatHistory(
     const chatEl = createChatHistoryItem(
       chat,
       chat.id === activeId,
-      onDelete || (() => {})
+      onDelete || (() => {}),
+      onRename
     );
     container.appendChild(chatEl);
   });

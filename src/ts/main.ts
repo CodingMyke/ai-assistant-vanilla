@@ -11,6 +11,7 @@ import {
   setSelectedModel,
   getSelectedModel,
   showDeleteConfirmModal,
+  enableChatRename,
 } from "./ui";
 import { generateId, truncateText, sortChatsByTimestamp } from "./utils";
 
@@ -38,7 +39,13 @@ function init() {
   const chats = loadChats();
 
   // Aggiorna la visualizzazione della cronologia
-  updateChatHistory(chats, chatHistoryContainer, undefined, handleDeleteChat);
+  updateChatHistory(
+    chats,
+    chatHistoryContainer,
+    undefined,
+    handleDeleteChat,
+    handleRenameChat
+  );
 
   // Se ci sono chat, carica l'ultima
   if (chats.length > 0) {
@@ -121,7 +128,8 @@ function createNewChat() {
     loadChats(),
     chatHistoryContainer,
     newChat.id,
-    handleDeleteChat
+    handleDeleteChat,
+    handleRenameChat
   );
 }
 
@@ -136,7 +144,8 @@ function loadChat(chatId: string) {
       loadChats(),
       chatHistoryContainer,
       chatId,
-      handleDeleteChat
+      handleDeleteChat,
+      handleRenameChat
     );
     setSelectedModel(chat.model as any);
   }
@@ -173,7 +182,8 @@ async function sendMessage() {
     loadChats(),
     chatHistoryContainer,
     currentChat.id,
-    handleDeleteChat
+    handleDeleteChat,
+    handleRenameChat
   );
 
   // Resetta l'input
@@ -257,9 +267,50 @@ function handleDeleteChat(chatId: string) {
       loadChats(),
       chatHistoryContainer,
       currentChat?.id,
-      handleDeleteChat
+      handleDeleteChat,
+      handleRenameChat
     );
   }
+}
+
+// Funzione per gestire la rinomina di una chat
+function handleRenameChat(chatId: string) {
+  const chat = getChat(chatId);
+  if (!chat) return;
+
+  // Determina il titolo corrente
+  const currentTitle =
+    chat.title ||
+    (chat.messages.length > 0
+      ? truncateText(
+          chat.messages.find((msg) => msg.role === "user")?.content || "",
+          30
+        )
+      : "Nuova chat");
+
+  enableChatRename(chatId, currentTitle, (id: string, newTitle: string) => {
+    // Aggiorna il titolo della chat
+    const chatToUpdate = getChat(id);
+    if (chatToUpdate) {
+      chatToUpdate.title = newTitle;
+      chatToUpdate.timestamp = Date.now();
+      saveChat(chatToUpdate);
+
+      // Se è la chat corrente, aggiorna anche la variabile locale
+      if (currentChat && currentChat.id === id) {
+        currentChat.title = newTitle;
+      }
+
+      // Aggiorna la cronologia delle chat
+      updateChatHistory(
+        loadChats(),
+        chatHistoryContainer,
+        currentChat?.id,
+        handleDeleteChat,
+        handleRenameChat
+      );
+    }
+  });
 }
 
 // Funzione per cancellare tutte le chat
