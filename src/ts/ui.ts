@@ -45,23 +45,178 @@ export function createLoadingElement(): HTMLDivElement {
   return loadingEl;
 }
 
+// Funzione per mostrare il menu contestuale
+export function showChatContextMenu(
+  event: MouseEvent,
+  chatId: string,
+  onDelete: (chatId: string) => void
+): void {
+  // Rimuovi eventuali menu esistenti
+  const existingMenu = document.querySelector(".chat-context-menu");
+  if (existingMenu) {
+    existingMenu.remove();
+  }
+
+  // Crea il menu contestuale
+  const menu = document.createElement("div");
+  menu.classList.add("chat-context-menu");
+
+  // Opzione elimina
+  const deleteOption = document.createElement("button");
+  deleteOption.classList.add("context-menu-item", "delete-option");
+  deleteOption.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="3,6 5,6 21,6"></polyline>
+      <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+      <line x1="10" y1="11" x2="10" y2="17"></line>
+      <line x1="14" y1="11" x2="14" y2="17"></line>
+    </svg>
+    Elimina
+  `;
+
+  deleteOption.addEventListener("click", () => {
+    menu.remove();
+    showDeleteConfirmModal(chatId, onDelete);
+  });
+
+  menu.appendChild(deleteOption);
+
+  // Posiziona il menu
+  const rect = (event.target as HTMLElement).getBoundingClientRect();
+  menu.style.position = "fixed";
+  menu.style.left = `${rect.right + 5}px`;
+  menu.style.top = `${rect.top}px`;
+  menu.style.zIndex = "1000";
+
+  // Aggiungi il menu al documento temporaneamente per calcolare le dimensioni
+  document.body.appendChild(menu);
+  
+  // Calcola le dimensioni del menu e della finestra
+  const menuRect = menu.getBoundingClientRect();
+  const windowWidth = window.innerWidth;
+  const windowHeight = window.innerHeight;
+  
+  // Aggiusta la posizione orizzontale se il menu esce dalla finestra
+  if (menuRect.right > windowWidth) {
+    menu.style.left = `${rect.left - menuRect.width - 5}px`;
+  }
+  
+  // Aggiusta la posizione verticale se il menu esce dalla finestra
+  if (menuRect.bottom > windowHeight) {
+    menu.style.top = `${rect.bottom - menuRect.height}px`;
+  }
+
+  // Chiudi il menu quando si clicca altrove
+  const closeMenu = (e: MouseEvent) => {
+    if (!menu.contains(e.target as Node)) {
+      menu.remove();
+      document.removeEventListener("click", closeMenu);
+    }
+  };
+
+  // Aggiungi il listener dopo un breve delay per evitare la chiusura immediata
+  setTimeout(() => {
+    document.addEventListener("click", closeMenu);
+  }, 10);
+}
+
+// Funzione per mostrare la modale di conferma eliminazione
+export function showDeleteConfirmModal(
+  chatId: string,
+  onConfirm: (chatId: string) => void
+): void {
+  // Crea l'overlay della modale
+  const overlay = document.createElement("div");
+  overlay.classList.add("modal-overlay");
+
+  // Crea la modale
+  const modal = document.createElement("div");
+  modal.classList.add("delete-confirm-modal");
+
+  // Contenuto della modale
+  modal.innerHTML = `
+    <div class="modal-header">
+      <h3>Conferma eliminazione</h3>
+    </div>
+    <div class="modal-body">
+      <p>Sei sicuro di voler eliminare questa chat? Questa azione non può essere annullata.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary cancel-btn">Annulla</button>
+      <button class="btn btn-danger confirm-btn">Elimina</button>
+    </div>
+  `;
+
+  // Event listeners per i pulsanti
+  const cancelBtn = modal.querySelector(".cancel-btn") as HTMLButtonElement;
+  const confirmBtn = modal.querySelector(".confirm-btn") as HTMLButtonElement;
+
+  cancelBtn.addEventListener("click", () => {
+    overlay.remove();
+  });
+
+  confirmBtn.addEventListener("click", () => {
+    overlay.remove();
+    onConfirm(chatId);
+  });
+
+  // Chiudi la modale cliccando sull'overlay
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+    }
+  });
+
+  // Chiudi la modale con ESC
+  const handleEscape = (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      overlay.remove();
+      document.removeEventListener("keydown", handleEscape);
+    }
+  };
+  document.addEventListener("keydown", handleEscape);
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+}
+
 // Funzione per creare un elemento della cronologia chat
 export function createChatHistoryItem(
   chat: Chat,
-  isActive: boolean = false
+  isActive: boolean = false,
+  onDelete: (chatId: string) => void
 ): HTMLDivElement {
   const chatEl = document.createElement("div");
   chatEl.classList.add("chat-item");
   if (isActive) chatEl.classList.add("active");
   chatEl.dataset.id = chat.id;
 
+  // Container per il contenuto della chat
+  const chatContent = document.createElement("div");
+  chatContent.classList.add("chat-content");
+
   // Mostra il titolo o la prima domanda come titolo della chat
   const firstUserMessage = chat.messages.find((msg) => msg.role === "user");
-  chatEl.textContent =
+  chatContent.textContent =
     chat.title ||
     (firstUserMessage
       ? truncateText(firstUserMessage.content, 30)
       : "Nuova chat");
+
+  // Pulsante menu con 3 puntini
+  const menuButton = document.createElement("button");
+  menuButton.classList.add("chat-menu-btn");
+  menuButton.innerHTML = "⋯";
+  menuButton.setAttribute("aria-label", "Menu opzioni chat");
+
+  // Previeni la propagazione del click per evitare di selezionare la chat
+  menuButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    showChatContextMenu(e, chat.id, onDelete);
+  });
+
+  chatEl.appendChild(chatContent);
+  chatEl.appendChild(menuButton);
 
   return chatEl;
 }
@@ -103,7 +258,8 @@ export function updateMessagesView(
 export function updateChatHistory(
   chats: Chat[],
   container: HTMLElement,
-  activeId?: string
+  activeId?: string,
+  onDelete?: (chatId: string) => void
 ): void {
   container.innerHTML = "";
 
@@ -111,7 +267,11 @@ export function updateChatHistory(
   const sortedChats = sortChatsByTimestamp(chats);
 
   sortedChats.forEach((chat) => {
-    const chatEl = createChatHistoryItem(chat, chat.id === activeId);
+    const chatEl = createChatHistoryItem(
+      chat,
+      chat.id === activeId,
+      onDelete || (() => {})
+    );
     container.appendChild(chatEl);
   });
 }

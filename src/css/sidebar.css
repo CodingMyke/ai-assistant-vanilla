@@ -46,6 +46,41 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.chat-content {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-menu-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 1.2rem;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.2s, background-color 0.2s;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.chat-item:hover .chat-menu-btn {
+  opacity: 1;
+}
+
+.chat-menu-btn:hover {
+  background-color: var(--border-color);
+  color: var(--text-primary);
 }
 
 .chat-item:hover {

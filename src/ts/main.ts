@@ -34,7 +34,7 @@ function init() {
   const chats = loadChats();
 
   // Aggiorna la visualizzazione della cronologia
-  updateChatHistory(chats, chatHistoryContainer);
+  updateChatHistory(chats, chatHistoryContainer, undefined, handleDeleteChat);
 
   // Se ci sono chat, carica l'ultima
   if (chats.length > 0) {
@@ -74,6 +74,11 @@ function setupEventListeners() {
     const target = e.target as HTMLElement;
     const chatItem = target.closest(".chat-item") as HTMLDivElement;
 
+    // Ignora i click sui pulsanti del menu
+    if (target.closest(".chat-menu-btn")) {
+      return;
+    }
+
     if (chatItem && chatItem.dataset.id) {
       loadChat(chatItem.dataset.id);
     }
@@ -105,7 +110,12 @@ function createNewChat() {
 
   // Aggiorna l'interfaccia
   updateMessagesView([], messagesContainer);
-  updateChatHistory(loadChats(), chatHistoryContainer, newChat.id);
+  updateChatHistory(
+    loadChats(),
+    chatHistoryContainer,
+    newChat.id,
+    handleDeleteChat
+  );
 }
 
 // Funzione per caricare una chat esistente
@@ -115,7 +125,12 @@ function loadChat(chatId: string) {
   if (chat) {
     currentChat = chat;
     updateMessagesView(chat.messages, messagesContainer);
-    updateChatHistory(loadChats(), chatHistoryContainer, chatId);
+    updateChatHistory(
+      loadChats(),
+      chatHistoryContainer,
+      chatId,
+      handleDeleteChat
+    );
     setSelectedModel(chat.model as any);
   }
 }
@@ -147,7 +162,12 @@ async function sendMessage() {
 
   // Aggiorna l'interfaccia
   updateMessagesView(currentChat.messages, messagesContainer);
-  updateChatHistory(loadChats(), chatHistoryContainer, currentChat.id);
+  updateChatHistory(
+    loadChats(),
+    chatHistoryContainer,
+    currentChat.id,
+    handleDeleteChat
+  );
 
   // Resetta l'input
   userInput.value = "";
@@ -198,7 +218,40 @@ async function sendMessage() {
     saveChat(currentChat);
     updateMessagesView(currentChat.messages, messagesContainer);
   } finally {
+    // Rimuovi l'indicatore di caricamento
+    const loadingElement = messagesContainer.querySelector(".loading");
+    if (loadingElement) {
+      loadingElement.remove();
+    }
     isWaitingForResponse = false;
+  }
+}
+
+// Funzione per gestire l'eliminazione di una chat
+function handleDeleteChat(chatId: string) {
+  // Elimina la chat dal storage
+  deleteChat(chatId);
+
+  // Se la chat eliminata era quella corrente, gestisci la transizione
+  if (currentChat && currentChat.id === chatId) {
+    const remainingChats = loadChats();
+
+    if (remainingChats.length > 0) {
+      // Carica la chat più recente
+      const lastChat = sortChatsByTimestamp(remainingChats)[0];
+      loadChat(lastChat.id);
+    } else {
+      // Se non ci sono più chat, crea una nuova chat
+      createNewChat();
+    }
+  } else {
+    // Se la chat eliminata non era quella corrente, aggiorna solo la cronologia
+    updateChatHistory(
+      loadChats(),
+      chatHistoryContainer,
+      currentChat?.id,
+      handleDeleteChat
+    );
   }
 }
 
