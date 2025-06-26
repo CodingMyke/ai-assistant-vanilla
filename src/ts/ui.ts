@@ -1,6 +1,11 @@
 // ui.ts - Gestione dell'interfaccia utente
 
 import type { Chat, Message, OpenAIModel } from "./types";
+import {
+  formatMarkdownToHtml,
+  truncateText,
+  sortChatsByTimestamp,
+} from "./utils";
 
 // Funzione per creare un elemento messaggio
 export function createMessageElement(message: Message): HTMLDivElement {
@@ -12,12 +17,7 @@ export function createMessageElement(message: Message): HTMLDivElement {
 
   // Per i messaggi dell'assistente, convertiamo il markdown in HTML
   if (message.role === "assistant") {
-    // Implementazione semplificata, in un'app reale si userebbe una libreria come marked.js
-    const formattedContent = message.content
-      .replace(/```(\w*)(\n[\s\S]*?\n)```/g, "<pre><code>$2</code></pre>")
-      .replace(/`([^`]+)`/g, "<code>$1</code>")
-      .replace(/\n/g, "<br>");
-
+    const formattedContent = formatMarkdownToHtml(message.content);
     messageEl.innerHTML = formattedContent;
   } else {
     messageEl.textContent = message.content;
@@ -60,7 +60,7 @@ export function createChatHistoryItem(
   chatEl.textContent =
     chat.title ||
     (firstUserMessage
-      ? firstUserMessage.content.substring(0, 30) + "..."
+      ? truncateText(firstUserMessage.content, 30)
       : "Nuova chat");
 
   return chatEl;
@@ -108,7 +108,7 @@ export function updateChatHistory(
   container.innerHTML = "";
 
   // Ordina le chat per timestamp (più recenti prima)
-  const sortedChats = [...chats].sort((a, b) => b.timestamp - a.timestamp);
+  const sortedChats = sortChatsByTimestamp(chats);
 
   sortedChats.forEach((chat) => {
     const chatEl = createChatHistoryItem(chat, chat.id === activeId);

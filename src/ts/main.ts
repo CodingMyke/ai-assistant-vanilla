@@ -11,6 +11,7 @@ import {
   setSelectedModel,
   getSelectedModel,
 } from "./ui";
+import { generateId, truncateText, sortChatsByTimestamp } from "./utils";
 
 // Elementi DOM
 const messagesContainer = document.getElementById("messages") as HTMLDivElement;
@@ -37,7 +38,7 @@ function init() {
 
   // Se ci sono chat, carica l'ultima
   if (chats.length > 0) {
-    const lastChat = chats.sort((a, b) => b.timestamp - a.timestamp)[0];
+    const lastChat = sortChatsByTimestamp(chats)[0];
     loadChat(lastChat.id);
   } else {
     // Altrimenti crea una nuova chat
@@ -138,8 +139,7 @@ async function sendMessage() {
 
   // Se è il primo messaggio, imposta il titolo della chat
   if (!currentChat.title && currentChat.messages.length === 1) {
-    currentChat.title =
-      content.substring(0, 30) + (content.length > 30 ? "..." : "");
+    currentChat.title = truncateText(content, 30);
   }
 
   currentChat.timestamp = Date.now();
@@ -200,11 +200,6 @@ async function sendMessage() {
   } finally {
     isWaitingForResponse = false;
   }
-}
-
-// Funzione per generare un ID univoco
-function generateId(): string {
-  return crypto.randomUUID();
 }
 
 // Avvia l'applicazione quando il DOM è caricato
